@@ -37,32 +37,33 @@ func main() {
 				Usage:       "Start JioTV Go server",
 				Description: "The serve command starts JioTV Go server, and listens on the host and port. The default host is localhost and port is 5001.",
 				Action: func(c *cli.Context) error {
-					if c.Bool("skip-update-check") {
-						fmt.Println("INFO: Skipping update check")
-					} else {
-						cmd.PrintIfUpdateAvailable(c)
-					}
-					host := c.String("host")
-					// overwrite host if --public flag is passed
-					if c.Bool("public") {
-						fmt.Println("INFO: You are exposing your server to outside your local network (public)!")
-						fmt.Println("INFO: Overwriting host to [::] for public access")
-						host = "[::]"
-					}
-					port := c.String("port")
-					configPath := c.String("config")
-					tls := c.Bool("tls")
-					tlsCertPath := c.String("tls-cert")
-					tlsKeyPath := c.String("tls-key")
-					return cmd.JioTVServer(cmd.JioTVServerConfig{
-						Host:        host,
-						Port:        port,
-						ConfigPath:  configPath,
-						TLS:         tls,
-						TLSCertPath: tlsCertPath,
-						TLSKeyPath:  tlsKeyPath,
-					})
-				},
+    if c.Bool("skip-update-check") {
+        fmt.Println("INFO: Skipping update check")
+    } else {
+        cmd.PrintIfUpdateAvailable(c)
+    }
+
+    // Automatically bind to 0.0.0.0 and environment PORT if available
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = c.String("port") // fallback to CLI flag if PORT env not set
+    }
+    host := "0.0.0.0" // always bind to 0.0.0.0 for public access
+
+    configPath := c.String("config")
+    tls := c.Bool("tls")
+    tlsCertPath := c.String("tls-cert")
+    tlsKeyPath := c.String("tls-key")
+
+    return cmd.JioTVServer(cmd.JioTVServerConfig{
+        Host:        host,
+        Port:        port,
+        ConfigPath:  configPath,
+        TLS:         tls,
+        TLSCertPath: tlsCertPath,
+        TLSKeyPath:  tlsKeyPath,
+    })
+},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "config",
